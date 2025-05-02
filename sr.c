@@ -86,7 +86,10 @@ void A_output(struct msg message)
 
     /* put packet in window buffer */
     /* windowlast will always be 0 for alternating bit; but not for GoBackN */
-    windowlast = (windowlast + 1) % WINDOWSIZE; 
+    if (A_nextseqnum >= windowfirst)
+      index = A_nextseqnum - seqfirst;
+    else
+      index =  WINDOWSIZE - seqfirst + A_nextseqnum;
     buffer[windowlast] = sendpkt;
     windowcount++;
 
