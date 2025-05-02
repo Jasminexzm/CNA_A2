@@ -45,12 +45,12 @@ int ComputeChecksum(struct pkt packet)
   return checksum;
 }
 
-bool IsCorrupted(struct pkt packet)
+int IsCorrupted(struct pkt packet)
 {
   if (packet.checksum == ComputeChecksum(packet))
-    return (false);
+    return -1;
   else
-    return (true);
+    return 0;
 }
 
 
@@ -66,11 +66,16 @@ void A_output(struct msg message)
 {
   struct pkt sendpkt;
   int i;
+  int index;
+  int seqfirst = windowfirst;
+  int seqlast = (windowfirst + WINDOWSIZE - 1) % SEQSPACE;
 
   /* if not blocked waiting on ACK */
-  if ( windowcount < WINDOWSIZE) {
+  if (((seqfirst <= seqlast) && (A_nextseqnum >= seqfirst && A_nextseqnum <= seqlast)) ||
+      ((seqfirst > seqlast) && (A_nextseqnum >= seqfirst || A_nextseqnum <= seqlast)))
+  {
     if (TRACE > 1)
-      printf("----A: New message arrives, send window is not full, send new messge to layer3!\n");
+      printf("----A: New message arrives, window is not full, send new packet to layer3!\n");
 
     /* create packet */
     sendpkt.seqnum = A_nextseqnum;
