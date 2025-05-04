@@ -116,7 +116,24 @@ void A_output(struct msg message)
 
 /* called from layer 3, when a packet arrives for layer 4 
    In this practical this will always be an ACK as B never sends data.
+
+  This function handles the ACKs received from receiver B.
+  Unlike Go-Back-N, where a cumulative ACK causes the sender to slide its window all at once,
+  Selective Repeat treats each ACK independently. Therefore:
+  
+  1. We first check whether the ACK is corrupted.
+  2. Then we verify if the ACK falls within the current sender window.
+     Since sequence numbers wrap around in SR, we need to account for circular indexing.
+  3. If the ACK is valid and hasn't been seen before:
+     - We mark the corresponding packet as acknowledged in the buffer.
+     - If it ACKs the base of the window (windowfirst), we try to advance the window.
+       This is done by checking how many consecutive ACKs (starting from base) we’ve received.
+       We then shift the buffer, update the window start pointer, and restart the timer.
+  4. If the ACK is a duplicate (already marked), we simply ignore it.
+  5. If the ACK is not for the base but within the window, we still mark it as acknowledged.
+     It may help slide the window later when earlier packets get ACKed.
 */
+
 void A_input(struct pkt packet)
 {
   int ackcount = 0;
@@ -161,33 +178,45 @@ void A_input(struct pkt packet)
           printf("----A: duplicate ACK received, do nothing!\n");
       }
 
-            /* cumulative acknowledgement - determine how many packets are ACKed */
-            if (packet.acknum >= seqfirst)
-              ackcount = packet.acknum + 1 - seqfirst;
-            else
-              ackcount = SEQSPACE - seqfirst + packet.acknum;
-
-	    /* slide window by the number of packets ACKed */
-            windowfirst = (windowfirst + ackcount) % WINDOWSIZE;
-
-            /* delete the acked packets from window buffer */
-            for (i=0; i<ackcount; i++)
-              windowcount--;
-
-	    /* start timer again if there are still more unacked packets in window */
-            stoptimer(A);
-            if (windowcount > 0)
-              starttimer(A, RTT);
-
-          }
+      /*compare it is the base one*/
+      if (packet.acknum == seqfirst)
+      {
+        /*check how many concsecutive acks recevied in buffer*/
+        for (i = 0; i < WINDOWSIZE; i++)
+        {
+          if (buffer[i].acknum != NOTINUSE && strcmp(buffer[i].payload,"") != 0)
+            ackcount++;
+          else
+            break;
         }
-        else
-          if (TRACE > 0)
-        printf ("----A: duplicate ACK received, do nothing!\n");
-  }
-  else 
-    if (TRACE > 0)
-      printf ("----A: corrupted ACK is received, do nothing!\n");
+
+        /*slide window*/
+        windowfirst = (windowfirst + ackcount) % SEQSPACE;
+
+        /*update buffer*/
+        for (i = 0; i < WINDOWSIZE; i++)
+        {
+          if (buffer[i + ackcount].acknum == NOTINUSE || (buffer[i].seqnum + ackcount) % SEQSPACE == A_nextseqnum)
+            buffer[i] = buffer[i + ackcount];
+        }
+
+        /*restart timer*/
+        stoptimer(A);
+        if (windowcount > 0)
+          starttimer(A,RTT);
+      }
+      else
+      {
+        /*update buffer*/
+        buffer[index].acknum = packet.acknum;
+      }
+    }
+    }
+    else
+    {
+      if (TRACE > 0)
+        printf("----A: corrupted ACK is received, do nothing!\n");
+    }
 }
 
 /* called when A's timer goes off */
