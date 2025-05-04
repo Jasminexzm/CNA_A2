@@ -68,7 +68,7 @@ void A_output(struct msg message)
 {
   struct pkt sendpkt;
   int i;
-  int buf_index;
+  int index;
   int seqfirst = windowfirst;
   int seqlast = (windowfirst + WINDOWSIZE - 1) % SEQSPACE;
 
@@ -82,40 +82,39 @@ void A_output(struct msg message)
     /* create packet */
     sendpkt.seqnum = A_nextseqnum;
     sendpkt.acknum = NOTINUSE;
-    for (i = 0; i < 20; i++)
+    for ( i=0; i<20 ; i++ ) 
       sendpkt.payload[i] = message.data[i];
-    sendpkt.checksum = ComputeChecksum(sendpkt);
-
-    /* compute buffer index */
-    if (A_nextseqnum >= windowfirst)
-      buf_index = A_nextseqnum - seqfirst;
-    else
-      buf_index = WINDOWSIZE - seqfirst + A_nextseqnum;
+    sendpkt.checksum = ComputeChecksum(sendpkt); 
 
     /* put packet in window buffer */
-    buffer[buf_index] = sendpkt;
+    /* windowlast will always be 0 for alternating bit; but not for GoBackN */
+    if (A_nextseqnum >= windowfirst)
+      index = A_nextseqnum - seqfirst;
+    else
+      index =  WINDOWSIZE - seqfirst + A_nextseqnum;
+    buffer[windowlast] = sendpkt;
     windowcount++;
 
     /* send out packet */
     if (TRACE > 0)
       printf("Sending packet %d to layer 3\n", sendpkt.seqnum);
-    tolayer3(A, sendpkt);
+    tolayer3 (A, sendpkt);
 
-    /* start timer if this is the first unACKed packet in the window */
-    if (windowcount == 1)
-      starttimer(A, RTT);
+    /* start timer if first packet in window */
+    if (windowcount == seqfirst)
+      starttimer(A,RTT);
 
-    /* update next sequence number */
-    A_nextseqnum = (A_nextseqnum + 1) % SEQSPACE;
+    /* get next sequence number, wrap back to 0 */
+    A_nextseqnum = (A_nextseqnum + 1) % SEQSPACE;  
   }
-  else
-  {
-    /* window is full */
+  /* if blocked,  window is full */
+  else {
     if (TRACE > 0)
       printf("----A: New message arrives, send window is full\n");
     window_full++;
   }
 }
+
 
 /* called from layer 3, when a packet arrives for layer 4 
    In this practical this will always be an ACK as B never sends data.
