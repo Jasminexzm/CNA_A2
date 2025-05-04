@@ -138,72 +138,72 @@ void A_output(struct msg message)
 
 void A_input(struct pkt packet)
 {
-  int ackcount = 0;
   int i;
+  int index;
   int seqfirst = windowfirst;
   int seqlast = (windowfirst + WINDOWSIZE - 1) % SEQSPACE;
-  int index;
 
-  /* Check if the received ACK is not corrupted */
+  /* Check if ACK is not corrupted */
   if (!IsCorrupted(packet)) {
     if (TRACE > 0)
       printf("----A: uncorrupted ACK %d is received\n", packet.acknum);
     total_ACKs_received++;
 
-    /* Check if the ACK falls within the current sender window */
+    /* Check if ACK is within the current sender window */
     if (((seqfirst <= seqlast) && (packet.acknum >= seqfirst && packet.acknum <= seqlast)) ||
         ((seqfirst > seqlast) && (packet.acknum >= seqfirst || packet.acknum <= seqlast))) {
 
-      /* Calculate index in buffer for this ACK */
+      /* Calculate index of this ACK in the buffer */
       if (packet.acknum >= seqfirst)
         index = packet.acknum - seqfirst;
       else
         index = WINDOWSIZE - (seqfirst - packet.acknum);
 
-      /* If this is a new ACK */
+      /* If this ACK has not been received before */
       if (buffer[index].acknum == NOTINUSE) {
         if (TRACE > 0)
           printf("----A: ACK %d is not a duplicate\n", packet.acknum);
         buffer[index].acknum = packet.acknum;
-        new_ACKs++;
         windowcount--;
+        new_ACKs++;
       } else {
-        /* Duplicate ACK */
+        /* Duplicate ACK, ignore */
         if (TRACE > 0)
           printf("----A: duplicate ACK %d received, do nothing!\n", packet.acknum);
       }
 
-      /* If ACK is for the base of the window, attempt to slide window forward */
-      if (packet.acknum == seqfirst) {
-        /* Count how many consecutive ACKs from the beginning of the buffer */
-        for (i = 0; i < WINDOWSIZE; i++) {
-          if (buffer[i].acknum != NOTINUSE)
-            ackcount++;
-          else
-            break;
+      /* Try to slide the window forward if possible */
+      int slide = 0;
+      for (i = 0; i < WINDOWSIZE; i++) {
+        if (buffer[i].acknum != NOTINUSE)
+          slide++;
+        else
+          break;
+      }
+
+      if (slide > 0) {
+        /* Update the window start pointer */
+        windowfirst = (windowfirst + slide) % SEQSPACE;
+
+        /* Shift buffer left by 'slide' positions */
+        for (i = 0; i < WINDOWSIZE - slide; i++) {
+          buffer[i] = buffer[i + slide];
         }
 
-        /* Slide window and shift buffer */
-        windowfirst = (windowfirst + ackcount) % SEQSPACE;
-
-        for (i = 0; i < WINDOWSIZE - ackcount; i++) {
-          buffer[i] = buffer[i + ackcount];
-        }
-
-        /* Clear emptied buffer slots */
-        for (i = WINDOWSIZE - ackcount; i < WINDOWSIZE; i++) {
+        /* Clear remaining buffer entries */
+        for (i = WINDOWSIZE - slide; i < WINDOWSIZE; i++) {
           buffer[i].acknum = NOTINUSE;
           memset(buffer[i].payload, 0, sizeof(buffer[i].payload));
         }
 
-        /* Restart timer if packets remain unACKed */
+        /* Stop and restart timer if necessary */
         stoptimer(A);
         if (windowcount > 0)
           starttimer(A, RTT);
       }
     }
   } else {
-    /* Corrupted ACK */
+    /* Corrupted ACK received, ignore */
     if (TRACE > 0)
       printf("----A: corrupted ACK is received, do nothing!\n");
   }
@@ -213,12 +213,12 @@ void A_input(struct pkt packet)
 /* When it is necessary to resend a packet, the oldest unacknowledged packet should be resent*/
 void A_timerinterrupt(void)
 {
-  /* Timeout occurred – resend the oldest unacknowledged packet */
+  /* Timeout occurred, resend the earliest unACKed packet */
   if (TRACE > 0)
     printf("----A: timeout occurred, resending base packet\n");
 
   if (windowcount > 0) {
-    tolayer3(A, buffer[0]);
+    tolayer3(A, buffer[0]);  /* resend the packet at the base of the window */
     if (TRACE > 0)
       printf("----A: resending packet %d\n", buffer[0].seqnum);
     packets_resent++;
