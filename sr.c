@@ -132,19 +132,31 @@ void A_input(struct pkt packet)
     total_ACKs_received++;
 
     /* check if new ACK or duplicate */
-    if (packet.acknum  >= seqfirst)
-      index = packet.acknum - seqfirst;
-    else
-      index = WINDOWSIZE - seqfirst + packet.acknum;
+    seqfirst = windowfirst;
+    seqlast = (windowfirst + WINDOWSIZE - 1) % SEQSPACE;
+          
+    /* check case when seqnum has and hasn't wrapped */
+    if (((seqfirst <= seqlast) && (packet.acknum >= seqfirst && packet.acknum <= seqlast)) ||
+        ((seqfirst > seqlast) && (packet.acknum >= seqfirst || packet.acknum <= seqlast))) {
 
-          /* check case when seqnum has and hasn't wrapped */
-          if (((seqfirst <= seqlast) && (packet.acknum >= seqfirst && packet.acknum <= seqlast)) ||
-              ((seqfirst > seqlast) && (packet.acknum >= seqfirst || packet.acknum <= seqlast))) {
+      /* check coresponding position in window buffer */
+      if (packet.acknum >= seqfirst)
+        index = packet.acknum - seqfirst;
+      
+      else 
+        index = WINDOWSIZE - seqfirst + packet.acknum;
 
-            /* packet is a new ACK */
+      if (buffer[index].acknum == NOTINUSE)
+      {
+        /* packet is a new ACK */
             if (TRACE > 0)
               printf("----A: ACK %d is not a duplicate\n",packet.acknum);
             new_ACKs++;
+            windowcount--;
+            buffer[index].acknum = packet.acknum;
+      }
+      else
+      {
 
             /* cumulative acknowledgement - determine how many packets are ACKed */
             if (packet.acknum >= seqfirst)
