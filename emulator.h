@@ -37,4 +37,4 @@ extern void tolayer5(int, char[20]);
 extern void starttimer(int, double);       
 
 /* stop timer at A or B (int) */
-extern void stoptimer(int);               
+extern void stoptimer(int);

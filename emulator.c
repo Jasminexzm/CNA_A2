@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "emulator.h"
-#include "gbn.h"
+#include "sr.h"
 
 struct event {
   float evtime;           /* event time */
