@@ -156,7 +156,10 @@ void A_input(struct pkt packet)
             buffer[index].acknum = packet.acknum;
       }
       else
-      {
+      { 
+        if (TRACE > 0)
+          printf("----A: duplicate ACK received, do nothing!\n");
+      }
 
             /* cumulative acknowledgement - determine how many packets are ACKed */
             if (packet.acknum >= seqfirst)
