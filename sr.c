@@ -220,22 +220,17 @@ void A_input(struct pkt packet)
 }
 
 /* called when A's timer goes off */
+/* When it is necessary to resend a packet, the oldest unacknowledged packet should be resent*/
 void A_timerinterrupt(void)
 {
-  int i;
-
   if (TRACE > 0)
+  {
     printf("----A: time out,resend packets!\n");
-
-  for(i=0; i<windowcount; i++) {
-
-    if (TRACE > 0)
-      printf ("---A: resending packet %d\n", (buffer[(windowfirst+i) % WINDOWSIZE]).seqnum);
-
-    tolayer3(A,buffer[(windowfirst+i) % WINDOWSIZE]);
-    packets_resent++;
-    if (i==0) starttimer(A,RTT);
+    printf("---A: resending packet %d\n", (buffer[0]).seqnum);
   }
+  tolayer3(A,buffer[0]);
+  packets_resent++;
+  starttimer(A,RTT);
 }       
 
 
