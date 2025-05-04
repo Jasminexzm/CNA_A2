@@ -99,7 +99,7 @@ void A_output(struct msg message)
     tolayer3 (A, sendpkt);
 
     /* start timer if first packet in window */
-    if (windowcount == 1)
+    if (windowcount == seqfirst)
       starttimer(A,RTT);
 
     /* get next sequence number, wrap back to 0 */
@@ -121,6 +121,9 @@ void A_input(struct pkt packet)
 {
   int ackcount = 0;
   int i;
+  int seqfirst;
+  int seqlast;
+  int index;
 
   /* if received ACK is not corrupted */ 
   if (!IsCorrupted(packet)) {
