@@ -142,7 +142,6 @@ void A_input(struct pkt packet)
     int index,slide = 0;
     int i;
     int seqfirst, seqlast;
-    int ackcount;
 
     /* Check if ACK is not corrupted */
     if (!IsCorrupted(packet)) {
@@ -152,7 +151,6 @@ void A_input(struct pkt packet)
 
         seqfirst = windowfirst;
         seqlast = (windowfirst + WINDOWSIZE - 1) % SEQSPACE;
-        ackcount = 0;
 
         /* Check if ACK is within the current window */ 
         if (((seqfirst <= seqlast) && (packet.acknum >= seqfirst && packet.acknum <= seqlast)) ||
@@ -250,9 +248,7 @@ void A_init(void)
 
 static int expectedseqnum; /* the sequence number expected next by the receiver */
 static int B_nextseqnum;   /* the sequence number for the next packets sent by B */
-static struct pkt buffer_b[WINDOWSIZE];
 static int windowfirst;
-static int receivelast;
 
 
 /* called from layer 3, when a packet arrives for layer 4 at B*/
