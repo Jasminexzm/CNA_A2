@@ -25,7 +25,7 @@
 
 #define RTT  16.0       /* round trip time.  MUST BE SET TO 16.0 when submitting assignment */
 #define WINDOWSIZE 6    /* the maximum number of buffered unacked packet */
-#define SEQSPACE (2 * WINDOWSIZE)      /* the min sequence space for GBN must be at least windowsize + 1 */
+#define SEQSPACE (2 * WINDOWSIZE)  /* for Selective Repeat: sequence space must be at least 2 × window size to avoid ambiguity */
 #define NOTINUSE (-1)   /* used to fill header fields that are not being used */
 
 /* generic procedure to compute the checksum of a packet.  Used by both sender and receiver  
@@ -288,6 +288,9 @@ void B_input(struct pkt packet)
       printf("----B: packet %d is correctly received, send ACK!\n", packet.seqnum);
     packets_received++;
 
+    /* deliver to receiving application */
+    tolayer5(B, packet.payload);
+
     /* create sendpkt */
     /* send an ACK foe the received packet */
     sendpkt.acknum = packet.seqnum;
@@ -352,7 +355,7 @@ void B_input(struct pkt packet)
 
         }
         /* deliver to receiving application */
-        tolayer5(B,packet.payload);
+        /* tolayer5(B,packet.payload);*/
       }
     }
   }          
