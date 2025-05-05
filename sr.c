@@ -48,10 +48,11 @@ int ComputeChecksum(struct pkt packet)
 
 int IsCorrupted(struct pkt packet)
 {
-  return packet.checksum != ComputeChecksum(packet);
+  if (packet.checksum == ComputeChecksum(packet))
+    return -1;
+  else
+    return 0;
 }
-
-
 
 /********* Sender (A) variables and functions ************/
 
@@ -80,13 +81,13 @@ void A_output(struct msg message)
     /* create packet */
     sendpkt.seqnum = A_nextseqnum;
     sendpkt.acknum = NOTINUSE;
-    for ( i=0; i<20 ; i++ ) 
+    for ( i = 0; i < 20 ; i++ ) 
       sendpkt.payload[i] = message.data[i];
     sendpkt.checksum = ComputeChecksum(sendpkt); 
 
     /* put packet in window buffer */
     /* windowlast will always be 0 for alternating bit; but not for GoBackN */
-    if (A_nextseqnum >= windowfirst)
+    if (A_nextseqnum >= seqfirst)
       index = A_nextseqnum - seqfirst;
     else
       index =  WINDOWSIZE - seqfirst + A_nextseqnum;
@@ -99,7 +100,7 @@ void A_output(struct msg message)
     tolayer3 (A, sendpkt);
 
     /* start timer if first packet in window */
-    if (A_nextseqnum == windowfirst)
+    if (A_nextseqnum == seqfirst)
       starttimer(A,RTT);
 
     /* get next sequence number, wrap back to 0 */
