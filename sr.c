@@ -75,7 +75,7 @@ void A_output(struct msg message)
       ((seqfirst > seqlast) && (A_nextseqnum >= seqfirst || A_nextseqnum <= seqlast)))
   {
     if (TRACE > 1)
-      printf("----A: New message arrives, window is not full, send new packet to layer3!\n");
+      printf("----A: New message arrives, send window is not full, send new messge to layer3!\n");
 
     /* create packet */
     sendpkt.seqnum = A_nextseqnum;
