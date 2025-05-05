@@ -229,86 +229,133 @@ void A_timerinterrupt(void)
 {
   /* Timeout occurred, resend the earliest unACKed packet */
   if (TRACE > 0)
+  {
     printf("----A: timeout occurred, resending base packet\n");
+    printf("---A: resending packet %d\n", (buffer[0]).seqnum);
+  }
 
-  if (windowcount > 0) {
-    tolayer3(A, buffer[0]);  /* resend the packet at the base of the window */
-    if (TRACE > 0)
-      printf("----A: resending packet %d\n", buffer[0].seqnum);
-    packets_resent++;
-
-        /* Restart the timer */
-        starttimer(A, RTT);
-    }
+  tolayer3(A,buffer[0]);
+  packets_resent++;
+  starttimer(A,RTT);
 }
 
 /* the following routine will be called once (only) before any other */
 /* entity A routines are called. You can use it to do any initialization */
 void A_init(void)
-{   
-  int i;
-
-    A_nextseqnum = 0;
-    windowfirst = 0;
-    windowlast = -1;
-    windowcount = 0;
-
-    /* Initialize the ack tracking array */
-    for (i = 0; i < WINDOWSIZE; i++) {
-        acked[i] = false;
-        buffer[i].acknum = NOTINUSE;
-        memset(buffer[i].payload, 0, sizeof(buffer[i].payload));
-    }
+{
+  /* initialise A's window, buffer and sequence number */
+  A_nextseqnum = 0;  /* A starts with seq num 0, do not change this */
+  windowfirst = 0;
+  windowlast = -1;   /* windowlast is where the last packet sent is stored.
+		     new packets are placed in winlast + 1
+		     so initially this is set to -1
+		   */
+  windowcount = 0;
 }
 
 
 
 /********* Receiver (B)  variables and procedures ************/
 
+static struct pkt buffer_b[WINDOWSIZE];    /* array for storing packets waiting for packet from A */
 static int expectedseqnum; /* the sequence number expected next by the receiver */
 static int B_nextseqnum;   /* the sequence number for the next packets sent by B */
-static int windowfirst;
+
+/*
+1. Upon receiving a packet, the receiver first checks if the packet is corrupted.
+2. If the received packet is within the receiver's window and not a duplicate, it is marked as received in the window buffer and an ACK is sent back to the sender.
+3. Check if the received packet is the first one in the window. If it is, move the window forward (by the number of currently received packets plus any additional consecutive packets that have been acknowledged) and store the packet in the window buffer.
+4. If the received packet is not the first one in the window, store it temporarily.
+5. The check involves verifying whether the sequence number of the received packet matches the sequence number of the first packet in the window.
+6. If the received packet is not within the window or is a duplicate, it is not stored in the window buffer, but an ACK is still sent back to the sender.
+*/
 
 
 /* called from layer 3, when a packet arrives for layer 4 at B*/
 void B_input(struct pkt packet)
 {
-    struct pkt ackpkt;
+    struct pkt sendpkt;
+    int pckcount = 0;
+    int i;
+    int seqfirst;
+    int seqlast;
+    int index;
 
-    if (!IsCorrupted(packet)) {
-        if (TRACE > 0)
-            printf("----B: received packet %d\n", packet.seqnum);
-        packets_received++;
+  /* if received packet is not corrupted */
+  if (IsCorrupted(packet) == -1) 
+  {
+    if (TRACE > 0)
+      printf("----B: packet %d is correctly received, send ACK!\n", packet.seqnum);
+    packets_received++;
 
-        /* If expected sequence number, deliver and send ACK */
-        if (packet.seqnum == expectedseqnum) {
-            tolayer5(B, packet.payload);
+    /* create sendpkt */
+    /* send an ACK foe the received packet */
+    sendpkt.acknum = packet.seqnum;
+    sendpkt.seqnum = NOTINUSE;
 
-            /* Prepare ACK */
-            ackpkt.seqnum = NOTINUSE;
-            ackpkt.acknum = expectedseqnum;
-            memset(ackpkt.payload, 0, sizeof(ackpkt.payload));
-            ackpkt.checksum = ComputeChecksum(ackpkt);
-            tolayer3(B, ackpkt);
+    /* we don't have any data to send,fill payload with 0's */
+    for (i = 0,i < 20,i++)
+      sendpkt.payload[i] = '0';
+    
+    /* computer checksum */
+    sendpkt.checksum = ComputeChecksum(sendpkt);
 
-            /* Move expected sequence number forward */
-            expectedseqnum = (expectedseqnum + 1) % SEQSPACE;
+    /* send ack */
+    tolayer3(B,sendpkt);
+
+    /* need to check if new packet or duplicate */
+    seqfirst = B_nextseqnum;
+    seqlast = (B_nextseqnum + WINDOWSIZE - 1) % SEQSPACE;
+
+    /* see if the packet received is inside the window */
+    if (((seqfirst <= seqlast) && (packet.seqnum >= seqfirst && packet.seqnum <= seqlast)) ||
+          ((seqfirst > seqlast) && (packet.seqnum >= seqfirst || packet.seqnum <= seqlast)))
+    {
+      /* get index */
+      if (packet.seqnum >= seqfirst)
+        index = packet.seqnum - seqfirst;
+      
+      else
+        index = WINDOWSIZE - seqfirst + packet.seqnum;
+      
+      /* keep receivelast*/
+      B_nextseqnum = B_nextseqnum > index ? B_nextseqnum:index;
+
+      /* if not duplicate,save to buffer */
+
+      if (strcmp(buffer_b[index].payload, packet.payload) != 0)
+      {
+        /* buffer it */
+        packet.acknum = packet.seqnum;
+        buffer_b[index] = packet;
+
+        /* if it is the base */
+        if (packet.seqnum == seqfirst)
+        {
+          for (i = 0, i < WINDOWSIZE; i++)
+          {
+            if (buffer_b[i].acknum >= 0 && strcmp(buffer_b[i].payload, "") != 0)
+              pckcount++;
+            else
+              break;
+          }
+
+          /* update state variables */
+          expectedseqnum = (expectedseqnum + pckcount) % SEQSPACE;
+
+          /* update buffer */
+          for (i = 0; i < WINDOWSIZE; i++)
+          {
+            if ((i + pckcount) <= (B_nextseqnum + 1))
+              buffer_b[i] = buffer_b[i + pckcount];
+          }
+
         }
-        else {
-            /* Out-of-order packet: still ACK to support SR */
-            ackpkt.seqnum = NOTINUSE;
-            ackpkt.acknum = packet.seqnum;
-            memset(ackpkt.payload, 0, sizeof(ackpkt.payload));
-            ackpkt.checksum = ComputeChecksum(ackpkt);
-            tolayer3(B, ackpkt);
-
-            if (TRACE > 0)
-                printf("----B: out-of-order packet %d received, buffered/ignored\n", packet.seqnum);
-        }
-    } else {
-        if (TRACE > 0)
-            printf("----B: corrupted packet received, ignored\n");
+        /* deliver to receiving application */
+        tolayer5(B,packet.payload);
+      }
     }
+  }          
 }
 
 /* the following routine will be called once (only) before any other */
@@ -316,7 +363,7 @@ void B_input(struct pkt packet)
 void B_init(void)
 {
   expectedseqnum = 0;
-  B_nextseqnum = 1;
+  B_nextseqnum = -1;
 }
 
 /******************************************************************************
