@@ -60,7 +60,6 @@ static struct pkt buffer[WINDOWSIZE];  /* array for storing packets waiting for 
 static int windowfirst, windowlast;    /* array indexes of the first/last packet awaiting ACK */
 static int windowcount;                /* the number of packets currently awaiting an ACK */
 static int A_nextseqnum;               /* the next sequence number to be used by the sender */
-static int acked[WINDOWSIZE];  /* 0 = false, 1 = true */
 
 /* called from layer 5 (application layer), passed the message to be sent to other side */
 void A_output(struct msg message)
@@ -81,7 +80,7 @@ void A_output(struct msg message)
     /* create packet */
     sendpkt.seqnum = A_nextseqnum;
     sendpkt.acknum = NOTINUSE;
-    for ( i = 0; i < 20 ; i++ ) 
+    for (i = 0; i < 20 ; i++) 
       sendpkt.payload[i] = message.data[i];
     sendpkt.checksum = ComputeChecksum(sendpkt); 
 
@@ -107,7 +106,8 @@ void A_output(struct msg message)
     A_nextseqnum = (A_nextseqnum + 1) % SEQSPACE;  
   }
   /* if blocked,  window is full */
-  else {
+  else 
+  {
     if (TRACE > 0)
       printf("----A: New message arrives, send window is full\n");
     window_full++;
@@ -139,14 +139,19 @@ void A_input(struct pkt packet)
 {
   int i;
   int index;
-  int seqfirst = windowfirst;
-  int seqlast = (windowfirst + WINDOWSIZE - 1) % SEQSPACE;
+  int seqfirst;
+  int seqlast;
+  int ackcount = 0;
 
   /* Check if ACK is not corrupted */
-  if (!IsCorrupted(packet)) {
+  if (IsCorrupted(packet) == -1) {
     if (TRACE > 0)
       printf("----A: uncorrupted ACK %d is received\n", packet.acknum);
     total_ACKs_received++;
+
+    /* check if new ACK or duplicate */
+    seqfirst = windowfirst;
+    seqlast = (windowfirst + WINDOWSIZE - 1) % SEQSPACE;
 
     /* Check if ACK is within the current sender window */
     if (((seqfirst <= seqlast) && (packet.acknum >= seqfirst && packet.acknum <= seqlast)) ||
