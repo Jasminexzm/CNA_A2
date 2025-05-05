@@ -1,0 +1,160 @@
+commit d85ccb5a21dcddd1fb95dad2e7376e67d4cd379c
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 14:01:36 2025 +0930
+
+    debug
+
+commit 5b44d8b798abdbeb0a477bfe646d4a97bd520aa6
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 13:25:03 2025 +0930
+
+    debugging
+
+commit 1a601745d3983c91bbd58573de9e1e0267541b57
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 13:09:29 2025 +0930
+
+    debugging B_input
+
+commit e3d1a820c747d905d55990bf9d996e5b7a41f343
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 12:35:57 2025 +0930
+
+    debugging A_input
+
+commit 226b636f37caf0a3fe8daa0df3cca6a8343be910
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 12:12:32 2025 +0930
+
+    debugging555
+
+commit 50c61e4f4893345e9c415419638d22e812a3fc50
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 12:01:10 2025 +0930
+
+    debugging
+
+commit 3a5ffac867e25175e4a45b66550239fa72ec86bc
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 02:12:25 2025 +0930
+
+    debugging
+
+commit 0d420b55b8b4ebd57b313a47ff799a4a8035cdbd
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 01:58:27 2025 +0930
+
+    Revert "debugging"
+    
+    This reverts commit ef712e35fa3c2c93ff0467853e9a342442d28c77.
+
+commit d6b1f87aa07c4e7d567685c7e13c2acb3c9e177a
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 01:57:00 2025 +0930
+
+    Revert "testing"
+    
+    This reverts commit 707e61a69a56ca67b5a8890a67445e55fd1dd5e5.
+
+commit 3446fd27af8b299086b87fc1aa509c15086d7364
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 01:54:39 2025 +0930
+
+    debugging
+
+commit b46e302ab4406aaa428cc4c549940184c3b318dd
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 01:42:53 2025 +0930
+
+    debugging
+
+commit ef712e35fa3c2c93ff0467853e9a342442d28c77
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 01:23:44 2025 +0930
+
+    debugging
+
+commit 8ce78dca40a06870547bc5c00ff641ac5a936bdc
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 01:10:47 2025 +0930
+
+    testing
+
+commit 707e61a69a56ca67b5a8890a67445e55fd1dd5e5
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 01:03:00 2025 +0930
+
+    testing
+
+commit cc307a8c4e127e212ea534e338db48de994390ca
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 00:52:16 2025 +0930
+
+    finish B_output
+
+commit 94f8c8d633b1c29e8fa0718221a9d9e7df5aa79f
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Mon May 5 00:06:07 2025 +0930
+
+    edit call A function
+
+commit 8d908b951e20e99929d8622f0488a0d52f9e35ad
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Sun May 4 23:54:10 2025 +0930
+
+    edit A_input
+
+commit 63af7b7121077cf9005c85c3f2b7ee5e97e61fb0
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Sun May 4 22:30:10 2025 +0930
+
+    edit new ACK
+
+commit ad2ac73d272408123a74fa6306e7d428daac3bca
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Sun May 4 22:23:42 2025 +0930
+
+    check coresponding position in window buffer
+
+commit 46a885ac5e7852af60c6c6745c7b860c9b3aaab1
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Sun May 4 22:11:02 2025 +0930
+
+    Merge branch 'main' of github.com:Jasminexzm/CNA_A2
+
+commit bb0c4278c0d9b3fa46cb849507ef6d1a06737eb5
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Sun May 4 14:43:47 2025 +0930
+
+    edit A_put
+
+commit 15660a4cec9ff28c8dbb1608eee8399e9ea1cb64
+Merge: 147ad2e c372650
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Fri May 2 15:28:42 2025 +0930
+
+    Finish merge
+
+commit 147ad2e02eba974ec256acb20ea3999203c23627
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Fri May 2 15:25:28 2025 +0930
+
+    put packet
+
+commit c372650eb38bbdfd2b75f2438fd4a4546b030b43
+Author: zhimin xu <139988709+Jasminexzm@users.noreply.github.com>
+Date:   Fri May 2 15:19:39 2025 +0930
+
+    Delete .vscode directory
+
+commit b133e0f32f20b1e220f8d7aec3fb0c792be7c5df
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Fri May 2 15:18:20 2025 +0930
+
+    if not blocked waiting on ACK
+
+commit 8b99f024f9195ab3a9898fc6a82a7ff10f615c70
+Author: zhimin <zhimin.hsu@gmail.com>
+Date:   Fri May 2 14:14:52 2025 +0930
+
+    First commit
