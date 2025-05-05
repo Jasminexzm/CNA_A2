@@ -178,7 +178,7 @@ if (IsCorrupted(packet) == -1)
     {
       /* Duplicate ACK, ignore */
       if (TRACE > 0)
-        printf("----A: duplicate ACK %d received, do nothing!\n");
+        printf("----A: duplicate ACK received, do nothing!\n");
     }
 
     /* compare it is the base one */
@@ -230,7 +230,7 @@ void A_timerinterrupt(void)
   /* Timeout occurred, resend the earliest unACKed packet */
   if (TRACE > 0)
   {
-    printf("----A: timeout occurred, resending base packet\n");
+    printf("----A: time out,resend packets!\n");
     printf("---A: resending packet %d\n", (buffer[0]).seqnum);
   }
 
@@ -294,7 +294,7 @@ void B_input(struct pkt packet)
     sendpkt.seqnum = NOTINUSE;
 
     /* we don't have any data to send,fill payload with 0's */
-    for (i = 0,i < 20,i++)
+    for (i = 0; i < 20; i++)
       sendpkt.payload[i] = '0';
     
     /* computer checksum */
@@ -332,7 +332,7 @@ void B_input(struct pkt packet)
         /* if it is the base */
         if (packet.seqnum == seqfirst)
         {
-          for (i = 0, i < WINDOWSIZE; i++)
+          for (i = 0; i < WINDOWSIZE; i++)
           {
             if (buffer_b[i].acknum >= 0 && strcmp(buffer_b[i].payload, "") != 0)
               pckcount++;
